@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9638bd07-4f0f-4e6a-b847-fdd78d24882a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/externalDependencies.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/GroupAnomalyDetection.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/GroupAnomalyDetection.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Attempt1/.ipynb_checkpoints/PCA2.0-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Attempt1/.ipynb_checkpoints/PCA2.0-checkpoint.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Attempt1/PCA2.0.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Attempt1/PCA2.0.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UnsupervisedClassifier/.ipynb_checkpoints/test_gb-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/UnsupervisedClassifier/.ipynb_checkpoints/test_gb-checkpoint.ipynb" afterDir="false" />
-    </list>
+    <list default="true" id="9638bd07-4f0f-4e6a-b847-fdd78d24882a" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
