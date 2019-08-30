@@ -77,7 +77,9 @@ def get_eval(ground_truth, pred_val):
         return (0,0,0)
     pre = TP/(TP+FP)
     rec = TP/(TP+FN)
-    F1 = 2*pre*rec/(pre+rec)
+    F1=0
+    if(rec!=0 or pre!=0):
+        F1 = 2*pre*rec/(pre+rec)
     #print("pre: ", pre, ";  rec: ", rec, "; F1: ", F1)
     return (pre, rec, F1)    
 def get_pred_errors(model, test_x, test_y):
@@ -96,7 +98,7 @@ if(__name__ == "__main__"):
     sample_size = 30
 
     # Train
-    train_sample_step = 10
+    train_sample_step = 1
     train_size = (normal_len-sample_size)//train_sample_step
     train_index = np.arange(normal_len, train_sample_step)[:train_size]
 
@@ -139,7 +141,7 @@ if(__name__ == "__main__"):
 
     for epoch in range(50):
         print("***********epoch: ", epoch)
-        model_deep_dropout_sigmoid.fit(X_train, y_train, epochs=1)
+        model_deep_dropout_sigmoid.fit(X_train, y_train, epochs=3)
         # eval model
         y_pred = model_deep_dropout_sigmoid.predict(X_train).ravel()
         print("clf mean on 14days", 1 - np.mean(y_pred[:train_size]))
