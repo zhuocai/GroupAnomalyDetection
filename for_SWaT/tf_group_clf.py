@@ -92,10 +92,10 @@ for epoch in range(6):
     print("***********epoch: ", epoch)
     model_deep_dropout_sigmoid.fit(X_train, y_train, epochs=3)
     # eval model
-    train_pred = model_relu_linear.predict(train_x)
+    train_pred = model_deep_dropout_sigmoid.predict(train_x)
     train_pred_mse = np.array([mean_squared_error(train_y[i], train_pred[i]) for i in range(len(train_y))])
     pd.Series(train_pred_mse).describe()
-    test_pred = model_relu_linear.predict(test_x)
+    test_pred = model_deep_dropout_sigmoid.predict(test_x)
     test_pred_mse = np.array([mean_squared_error(test_y[i], test_pred[i])for i in range(len(test_y))])
     pd.Series(test_pred_mse).describe()
     print("corr in test: ", np.corrcoef(test_pred_mse, test_attack_level))
