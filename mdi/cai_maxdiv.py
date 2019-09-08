@@ -295,6 +295,92 @@ def maxdiv_gaussian(X, intervals, mode = "I_OMEGA", gaussian_mode = "COV", **kwa
 
     return scores
 
+#
+# Maximally divergent regions using an Ensemble of Random Projection Historgrams
+#
+def maxdiv_erph(X, intervals, mode = "I_OMEGA", num_hist=100, num_bins=None, discount=1,**kwargs):
+    dimension, n = X.shape
+    numValidSamples = n if not np.ma.isMaskedArray(X) else X[0,:].count()
+    scores = []
+
+    if(num_bins is not None) and (num_bins<1):
+        num_bins = None
+
+    if(discount < 1e-7):
+        discount = 1e-7
+
+    # Generate random projections
+    proj_dims = int(round(np.sqrt(dimension)))
+    dim_range = np.arange(dimension)
+    proj = np.zeros((num_hist, dimension))
+    for i in range(num_hist):
+        np.random.shuffle(dim_range)
+        proj[i, dim_range[:proj_dims]] = np.random.randn(proj_dims)
+
+    # Project data and initialize histograms
+    Xp = proj.dot(X) if not np.ma.isMaskedArray(X) else np.ma.dot(proj,x)
+    hist = [Histogram1D]
+
+class Histogram1D(object):
+    def __init__(self, X, num_bins=None, store_data= True):
+        object.__init__(self)
+        self.vmin, self.vmax = X.min(), X.max()
+
+        if(num_bins is None):
+
+            max_pml = 0.0
+            argmax_pml=None
+            last_ll = np.ndarray((20,))
+            last_pen = np.ndarray((20,))
+            for b in range(2, len(X)//2+1):
+                self.num_bins=b
+                self.fit(X)
+                pml, ll, penalty = self._penaizedML()
+                last_ll[b%20] = ll
+                last_pen[b%20] = penalty
+                if(argmax_pml is None) or (pml > max_pml):
+                    max_pml, argmax_pml = pml, b
+                elif( b >= 22) and (b-argmax_pml > 20) \
+                        and(np.mean(last_ll[1:] - last_ll[:-1]) < np.mean(last_pen[1:] - last_pen[:-1])):
+                    break
+            self.num_bins = argmax_pml
+        else:
+            self.num_bins = num_bins
+
+        if(store_data):
+            self.fix(X)
+        else:
+            self.counts = np.zeros(self.num_bins, dtype=int)
+            self.N = 0
+
+    def fit(self, X, ind = False):
+        self.counts = np.zeros(self.num_bins, dtype=int)
+        self.N = len(X) if not np.ma.isMaskedArray(X) else X.count()
+        if not ind:
+            X = self.indices(X)
+        self.counts = np.array([(X==i).sum() for i in range(self.num_bins)])
+
+    def pdf(self, X, ind=False):
+        if not ind:
+            X = self.indices(X)
+        prob = self.num_bins * self.counts(X).astype(float)/self.N
+        if np.ma.isMaskedArray(X):
+            prob = np.ma.MaskedArray(X, X.mask)
+        return prob
+
+    def indices(self, X):
+        ind = ((X-self.vmin) * self.num_bins / (self.vmax - self.vmin)).astype(int)
+        ind[ind<0]=0
+        ind[ind>=self.num_bins] = self.num_bins-1
+        return ind
+
+    def _penalizedML(self):
+        ll = np.sum(self.counts.astype(float)* np.log(self.num_bins * self.counts.astype(float)/self.N + 1e-12))
+        penalization = self.num_bins - 1+ np.log(self.num_bins)**2.5
+        return ll - penalization, ll, penalization
+
+
+
 def denseRegionProposals(N, int_min = 6, int_max = 30):
     #print("int_min = ", int_min )
     #print("int_max = ", int_max)
