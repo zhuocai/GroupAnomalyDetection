@@ -197,6 +197,69 @@ def maxdiv_gaussian_globalcov(X, intervals, mode="I_OMEGA", gaussian_mode="GLOBA
     return scores
 
 
+### using log-likelihood only  score = |in|*S^{-1}.*S_in + |out|*S^{-1}.*S_out
+def maxdiv_ll(X, intervals):
+    n, dimension = X.shape
+
+    X_integral = np.cumsum(X, axis=0)
+    X_integral_all = X_integral[-1, :]
+    mean_all = X_integral_all / n
+
+    # X_outer = np.zeros((n, dimension, dimension))
+    # for i in range(n):
+    #     X_outer[i, :, :] = np.outer(X[i, :], X[i, :])
+    # X_outer_integral = np.cumsum(X_outer.reshape(n, -1), axis=0).reshape(n, dimension, dimension)
+
+    #np.save("../../data/wadi/outer_interval.npy", X_outer_integral)
+    X_outer_integral = np.load('../../data/wadi/outer_interval.npy')
+    X_outer_integral_all = X_outer_integral[-1, :, :]
+
+    cov = X_outer_integral_all / n - np.outer(mean_all, mean_all)
+    cov_chol = cho_factor(cov)
+    cov_inv = np.linalg.inv(cov)
+
+    scores = []
+
+    for a, b, score in intervals:
+        in_len = b - a
+        out_len = n - in_len
+        X_integral_in = X_integral[b - 1, :] if a == 0 else X_integral[b - 1, :] - X_integral[a - 1, :]
+        X_outer_integral_in = X_outer_integral[b - 1, :, :] if a == 0 else \
+            X_outer_integral[b - 1, :, :] - X_outer_integral[a - 1, :, :]
+        X_integral_out = X_integral_all - X_integral_in
+        X_outer_integral_out = X_outer_integral_all - X_outer_integral_in
+
+        # params:
+
+        mean_in = X_integral_in / in_len
+        mean_out = X_integral_out / out_len
+
+        w11 = 0.7
+        w12 = 1 - w11
+        w21 = 0.4
+        w22 = 1 - w21
+
+        w1 = 1
+        w2 = 1
+
+        mean_1 = w11 * mean_in + w12 * mean_out
+        mean_2 = w21 * mean_in + w22 * mean_out
+
+        val1 = X_outer_integral_in / in_len + np.outer(mean_1, mean_1)*(w11*w11-2*w11)\
+               +np.outer(mean_1, mean_2)*(w11*w12-w12)+np.outer(mean_2,mean_1)*(w11*w12-w12)\
+                +np.outer(mean_2, mean_2)*w12*w12
+        val2 = X_outer_integral_out / out_len  + np.outer(mean_2, mean_2)*(w22*w22-2*w22)\
+               +np.outer(mean_2, mean_1)*(w22*w21-w21)+np.outer(mean_1,mean_2)*(w22*w21-w21)\
+                +np.outer(mean_1, mean_1)*w21*w21
+
+        val = val1*w1+val2*w2
+        score = np.sum(cov_inv*val)
+
+        scores.append([a, b, score])
+
+    return scores
+
+
 #
 # Maximally divergent regions using a Gaussian assumption
 #
@@ -423,7 +486,7 @@ if (__name__ == "__main__"):
                         choices=['wadi', 'swat'])
     parser.add_argument('--dataset_path', type=str, default='../../data')
     parser.add_argument('--dataset_filename', type=str, default='_1.npy')
-    parser.add_argument('--mdi_method', type=str, default='gaussian')
+    parser.add_argument('--mdi_method', type=str, default='ll')
     parser.add_argument('--use_bnaf', type=int, default=1,
                         choices=[1, 0])
     args = parser.parse_args()
@@ -433,15 +496,14 @@ if (__name__ == "__main__"):
         data = np.load(os.path.join(args.dataset_path, args.dataset + "/anomaly_1.npy"))
     else:
         if args.dataset == 'wadi':
-            data = np.load(os.path.join(args.dataset_path, 'wadi/anomaly'+args.dataset_filename))
+            data = np.load(os.path.join(args.dataset_path, 'wadi/anomaly' + args.dataset_filename))
         elif args.dataset == 'swat':
-            data = np.load(os.path.join(args.dataset_path, 'swat/anomaly'+args.dataset_filename))
+            data = np.load(os.path.join(args.dataset_path, 'swat/anomaly' + args.dataset_filename))
         else:
             print("args.dataset error = ", args.dataset)
             data = None
     print("data.shape", data.shape)
-    data_attack = data[:, -1]
-    data = data[:, :-1]
+    data_attack = np.load('../../data/wadi/attack_level.npy')
 
     anomaly_intervals_gth = get_attack_interval(data_attack)
 
@@ -459,14 +521,18 @@ if (__name__ == "__main__"):
             print("K.size", K.shape)
             interval_scores = maxdiv_parzen(K, regions_proposals)
 
-
-        elif (method == "gaussian_globalcov"):
+        elif method == "gaussian_globalcov":
             print("gaussian_globbal_cov")
             interval_scores = maxdiv_gaussian_globalcov(data.T, regions_proposals)
 
-        elif (method == "gaussian"):
+        elif method == "gaussian":
             print("gaussian")
             interval_scores = maxdiv_gaussian(data.T, regions_proposals)
+
+        elif method == "ll":
+            print("ll")
+            interval_scores = maxdiv_ll(data, regions_proposals)
+
         else:
             print("method wrong")
             interval_scores = None
@@ -474,7 +540,7 @@ if (__name__ == "__main__"):
         if args.use_bnaf:
             bnaf_str = "bnaf"
         else:
-            bnaf_str='nonbnaf'
+            bnaf_str = 'nonbnaf'
         output_file_name = "region_proposals_{}_{}_{}.npy".format(
             args.dataset, bnaf_str, method)
 

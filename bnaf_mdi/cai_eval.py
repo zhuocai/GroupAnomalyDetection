@@ -56,30 +56,18 @@ if (__name__ == "__main__"):
                         choices=[1, 0])
     args = parser.parse_args()
     args.use_bnaf = bool(args.use_bnaf)
-    # load_data
-    if args.use_bnaf:
-        data = np.load(os.path.join(args.dataset_path, args.dataset + "/anomaly_1.npy"))
-    else:
-        if args.dataset == 'wadi':
-            data = np.load(os.path.join(args.dataset_path, 'wadi/anomaly' + args.dataset_filename))
-        elif args.dataset == 'swat':
-            data = np.load(os.path.join(args.dataset_path, 'swat/anomaly' + args.dataset_filename))
-        else:
-            print("args.dataset error = ", args.dataset)
-            data = None
-    print("data.shape", data.shape)
-    data_attack = data[:, -1]
-    data = data[:, :-1]
+
+    data_attack = np.load('../../data/wadi/attack_level.npy')
 
     anomaly_intervals_gth = get_attack_interval(data_attack)
     print("anomaly_intervals = ", anomaly_intervals_gth)
 
-    anomaly_level = np.zeros(data.shape[0])
+    anomaly_level = np.zeros(data_attack.shape[0])
     for i in range(len(anomaly_intervals_gth)):
         for j in range(anomaly_intervals_gth[i][0], anomaly_intervals_gth[i][1]):
             anomaly_level[j] = 1
     region_proposals = np.load("region_proposals_{}_{}_{}.npy".format(
-            args.dataset, 'bnaf' if args.use_bnaf else 'nonbnaf', args.mdi_method))
+        args.dataset, 'bnaf' if args.use_bnaf else 'nonbnaf', args.mdi_method))
     region_proposals_max = np.argmax(region_proposals[:, -1])
     print("max score interval:", region_proposals[region_proposals_max])
 
@@ -90,21 +78,16 @@ if (__name__ == "__main__"):
     region_proposals_df = region_proposals_df.sort_values("score", ascending=False)
     print(region_proposals_df.head())
     anomaly_scores = np.zeros(len(region_proposals))
-    anomaly_scores_pred = np.zeros(len(region_proposals))
 
-    anomaly_time_scores = np.zeros(data.shape[0])
-    anomaly_time_weights = np.zeros(data.shape[0]) + 0.1
+    anomaly_time_scores = np.zeros(data_attack.shape[0])
+    anomaly_time_weights = np.zeros(data_attack.shape[0]) + 1e-7
 
     for i in range(len(region_proposals)):
         start, end, score = int(region_proposals[i][0]), int(region_proposals[i][1]), region_proposals[i][2]
-
-        # print("region_proposals[i]: ", region_proposals[i])
-        anomaly_scores[i] = np.mean(anomaly_level[int(start):int(end)])
-        anomaly_scores_pred[i] = score
-
-        for j in range(start, end):
-            anomaly_time_scores[j] += score
-            anomaly_time_weights[j] += 1
+        if np.isnan(score):
+            print("i=",i, "score = ",score)
+        anomaly_time_scores[start:end] += score/np.power(end-start, -0.2)
+        anomaly_time_weights[start:end] += 1/np.power(end-start, -0.2)
 
     anomaly_time_scores_aver = anomaly_time_scores / anomaly_time_weights
     print("np.corrcoeff time score:", np.corrcoef(anomaly_time_scores_aver, anomaly_level))
@@ -113,16 +96,17 @@ if (__name__ == "__main__"):
     for pred_th in np.linspace(np.quantile(anomaly_time_scores_aver, 0.8), np.quantile(anomaly_time_scores_aver, 0.99),
                                200):
         res = eval_measure(anomaly_level, anomaly_time_scores_aver, test_th=0.5, pred_th=pred_th)
+
+        if res[2] > max_f1:
+            max_f1 = res[2]
         print("for pred_th = ", pred_th, "res = ", res)
-        if res[2]>max_f1:
-            max_f1=res[2]
     print("max f1: ", max_f1)
 
     plt.figure(figsize=(20, 10))
 
-    range2 = np.arange(0, data.shape[0])
+    range2 = np.arange(0, data_attack.shape[0])
     plt.plot(range2, anomaly_time_scores_aver[range2], color="b")
-    for i in range(len(anomaly_intervals_gth)):
-        plt.axvspan(anomaly_intervals_gth[i][0], anomaly_intervals_gth[i][1], alpha=0.3, color="red")
+    for j in range(len(anomaly_intervals_gth)):
+        plt.axvspan(anomaly_intervals_gth[j][0], anomaly_intervals_gth[j][1], alpha=0.3, color="red")
     plt.title('{}_{}_{}.score'.format(args.dataset, 'bnaf' if args.use_bnaf else 'nonbnaf', args.mdi_method))
     plt.show()

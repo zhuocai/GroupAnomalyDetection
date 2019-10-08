@@ -40,17 +40,23 @@ def eval_measure(test, pred, test_th=0.02, pred_th=0.24):
     return (pre, rec, F1)
 
 if __name__=="__main__":
-    anomaly_pred = -np.load('../../data/wadi/loss.npy')
-    anomaly_level = np.load('../../data/wadi/anomaly_pc4.npy')[:,-1]
+    anomaly_pred = np.load('b.npy')
+    anomaly_level = np.load('../../data/wadi/attack_level.npy')
     anomaly_intervals_gth = get_attack_interval(anomaly_level)
     
     print("np.corrcoeff time score:", np.corrcoef(anomaly_pred, anomaly_level))
 
-    for pred_th in np.linspace(np.quantile(anomaly_pred, 0.1), np.quantile(anomaly_pred, 0.98),
-                               100):
+    max_f1 = 0
+    max_th = 0
+    for pred_th in np.linspace(np.quantile(anomaly_pred, 0.90), np.quantile(anomaly_pred, 0.98),
+                               30):
         res = eval_measure(anomaly_level, anomaly_pred, test_th=0.5, pred_th=pred_th)
         print("for pred_th = ", pred_th, "res = ", res)
+        if res[2]>max_f1:
+            max_f1=res[2]
+            max_th = pred_th
 
+    print("max_f1:", max_f1, " th=", max_th)
     plt.figure(figsize=(20, 10))
 
     range2 = np.arange(0, anomaly_pred.shape[0])

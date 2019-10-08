@@ -3,10 +3,10 @@
 #params:
 param_dataset=wadi
 param_dataset_path=/home/caizhuo/research/anomaly/data/
-param_mdi_method=gaussian_globalcov # ['gaussian', 'gaussian_globalcov']
-param_dataset_filename="_np3.npy"
-param_use_bnaf=1 # [1 for use, 0 for not use]
-
+param_mdi_method=ll # ['gaussian', 'gaussian_globalcov', 'll']
+param_dataset_filename="_np5.npy"
+param_use_bnaf=0 # [1 for use, 0 for not use]
+param_use_score="a.npy"
 # run mdi
 
 python -W ignore cai_maxdiv.py --dataset $param_dataset \
@@ -14,6 +14,7 @@ python -W ignore cai_maxdiv.py --dataset $param_dataset \
           --dataset_filename $param_dataset_filename \
           --mdi_method $param_mdi_method \
           --use_bnaf $param_use_bnaf
+#          --use_score $param_use_score
 
 # run eval
 
