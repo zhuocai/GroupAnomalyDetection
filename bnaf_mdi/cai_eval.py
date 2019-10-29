@@ -54,6 +54,7 @@ if (__name__ == "__main__"):
     parser.add_argument('--mdi_method', type=str, default='gaussian')
     parser.add_argument('--use_bnaf', type=int, default=1,
                         choices=[1, 0])
+    parser.add_argument('--output_score', type=str, default="a")
     args = parser.parse_args()
     args.use_bnaf = bool(args.use_bnaf)
 
@@ -91,6 +92,7 @@ if (__name__ == "__main__"):
 
     anomaly_time_scores_aver = anomaly_time_scores / anomaly_time_weights
     print("np.corrcoeff time score:", np.corrcoef(anomaly_time_scores_aver, anomaly_level))
+    np.save(args.output_score+".npy", anomaly_time_scores_aver)
 
     max_f1 = 0
     for pred_th in np.linspace(np.quantile(anomaly_time_scores_aver, 0.8), np.quantile(anomaly_time_scores_aver, 0.99),

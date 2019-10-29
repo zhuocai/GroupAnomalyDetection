@@ -40,18 +40,19 @@ def eval_measure(test, pred, test_th=0.02, pred_th=0.24):
     return (pre, rec, F1)
 
 if __name__=="__main__":
-    anomaly_pred = np.load('b.npy')
+    file_name = "_px.npy"
+    anomaly_pred = np.load(file_name)
     anomaly_level = np.load('../../data/wadi/attack_level.npy')
     anomaly_intervals_gth = get_attack_interval(anomaly_level)
     
-    print("np.corrcoeff time score:", np.corrcoef(anomaly_pred, anomaly_level))
+    #print("np.corrcoeff time score:", np.corrcoef(anomaly_pred, anomaly_level))
 
     max_f1 = 0
     max_th = 0
-    for pred_th in np.linspace(np.quantile(anomaly_pred, 0.90), np.quantile(anomaly_pred, 0.98),
-                               30):
+    for pred_th in np.linspace(np.quantile(anomaly_pred, 0.80), np.quantile(anomaly_pred, 0.98),
+                               100):
         res = eval_measure(anomaly_level, anomaly_pred, test_th=0.5, pred_th=pred_th)
-        print("for pred_th = ", pred_th, "res = ", res)
+        #print("for pred_th = ", pred_th, "res = ", res)
         if res[2]>max_f1:
             max_f1=res[2]
             max_th = pred_th
@@ -64,4 +65,5 @@ if __name__=="__main__":
     for i in range(len(anomaly_intervals_gth)):
         plt.axvspan(anomaly_intervals_gth[i][0], anomaly_intervals_gth[i][1], alpha=0.3, color="red")
     #plt.title('{}_{}_{}.score'.format(args.dataset, 'bnaf' if args.use_bnaf else 'nonbnaf', args.mdi_method))
-    plt.show()
+    plt.title(file_name)
+    #plt.show()
