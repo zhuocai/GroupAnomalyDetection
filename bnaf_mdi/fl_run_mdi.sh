@@ -9,7 +9,7 @@ param_use_bnaf=0 # [1 for use, 0 for not use]
 param_use_score="a.npy"
 # run mdi
 
-python -W ignore cai_maxdiv_multi.py --dataset $param_dataset \
+python -W ignore fl_maxdiv.py --dataset $param_dataset \
           --dataset_path $param_dataset_path \
           --dataset_filename $param_dataset_filename \
           --mdi_method $param_mdi_method \
@@ -18,7 +18,7 @@ python -W ignore cai_maxdiv_multi.py --dataset $param_dataset \
 
 # run eval
 
-python -W ignore cai_eval.py --dataset $param_dataset \
+python -W ignore fl_eval.py --dataset $param_dataset \
           --dataset_path $param_dataset_path \
           --dataset_filename $param_dataset_filename \
           --mdi_method $param_mdi_method \
