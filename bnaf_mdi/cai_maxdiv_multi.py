@@ -504,9 +504,9 @@ if (__name__ == "__main__"):
         data = np.load(os.path.join(args.dataset_path, args.dataset + "/anomaly_1.npy"))
     else:
         if args.dataset == 'wadi':
-            data = np.load(os.path.join(args.dataset_path, 'wadi/anomaly' + args.dataset_filename))
+            data = np.load(os.path.join(args.dataset_path, 'wadi/' + args.dataset_filename))
         elif args.dataset == 'swat':
-            data = np.load(os.path.join(args.dataset_path, 'swat/anomaly' + args.dataset_filename))
+            data = np.load(os.path.join(args.dataset_path, 'swat/' + args.dataset_filename))
         else:
             print("args.dataset error = ", args.dataset)
             data = None

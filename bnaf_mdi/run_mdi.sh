@@ -2,9 +2,9 @@
 
 #params:
 param_dataset=wadi
-param_dataset_path=/home/caizhuo/research/anomaly/data/
+param_dataset_path=../../data
 param_mdi_method=gaussian_globalcov # ['gaussian', 'gaussian_globalcov', 'll']
-param_dataset_filename=".npy"
+param_dataset_filename="anomaly_h2.npy"
 param_use_bnaf=0 # [1 for use, 0 for not use]
 param_use_score="a.npy"
 # run mdi
